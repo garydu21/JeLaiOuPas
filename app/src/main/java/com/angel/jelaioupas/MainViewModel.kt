@@ -84,4 +84,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun clearResult() { _result.value = null }
+
+    fun allGames(): List<Game> = repo.allGames()
 }

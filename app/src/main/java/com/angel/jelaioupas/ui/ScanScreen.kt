@@ -9,27 +9,28 @@ import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import com.angel.jelaioupas.R
 import com.angel.jelaioupas.scanner.BarcodeAnalyzer
-import java.text.DateFormat
-import java.util.Date
 import java.util.concurrent.Executors
 
 @Composable
@@ -40,13 +41,14 @@ fun ScanScreen(
     scanEnabled: Boolean,
     onBarcode: (String) -> Unit,
     onOpenSettings: () -> Unit,
-    onSync: () -> Unit
+    onSync: () -> Unit,
+    onBack: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     var hasPermission by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) ==
-                    PackageManager.PERMISSION_GRANTED
+                PackageManager.PERMISSION_GRANTED
         )
     }
     val launcher = rememberLauncherForActivityResult(
@@ -57,61 +59,90 @@ fun ScanScreen(
         if (!hasPermission) launcher.launch(Manifest.permission.CAMERA)
     }
 
-    Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text("Je l'ai ou pas ?", style = MaterialTheme.typography.headlineSmall)
-            Row {
-                IconButton(onClick = onSync, enabled = !syncing) {
-                    if (syncing) CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp)
-                    else Icon(Icons.Default.Sync, contentDescription = "Synchroniser")
-                }
-                IconButton(onClick = onOpenSettings) {
-                    Icon(Icons.Default.Settings, contentDescription = "Réglages")
+    Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
+
+        if (hasPermission) {
+            // Caméra plein écran
+            CameraPreview(scanEnabled = scanEnabled, onBarcode = onBarcode)
+            // Voile sombre léger pour le contraste du cadre
+            Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.25f)))
+
+            // Viseur : cadre rouge "SCAN" centré
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.scan_frame),
+                    contentDescription = null,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier
+                        .fillMaxWidth(0.78f)
+                        .aspectRatio(1.74f)
+                )
+                Spacer(Modifier.height(28.dp))
+                Text(
+                    "Vise le code-barres du jeu",
+                    color = Color.White,
+                    fontFamily = Lato,
+                    fontSize = 18.sp,
+                    textAlign = TextAlign.Center
+                )
+            }
+        } else {
+            Column(
+                modifier = Modifier.fillMaxSize().padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text("Permission caméra requise", color = Color.White, fontFamily = Lato)
+                Spacer(Modifier.height(12.dp))
+                Button(onClick = { launcher.launch(Manifest.permission.CAMERA) }) {
+                    Text("Autoriser", fontFamily = Lato)
                 }
             }
         }
 
-        Spacer(Modifier.height(8.dp))
-        Text(
-            "Scanne le code-barres du jeu",
-            style = MaterialTheme.typography.titleMedium,
-            textAlign = TextAlign.Center
-        )
-        Spacer(Modifier.height(16.dp))
-
-        Box(
+        // Barre du haut : retour + sync + réglages
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f)
-                .clip(RoundedCornerShape(16.dp))
-                .background(Color.Black),
-            contentAlignment = Alignment.Center
+                .statusBarsPadding()
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            if (hasPermission) {
-                CameraPreview(scanEnabled = scanEnabled, onBarcode = onBarcode)
-            } else {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Permission caméra requise", color = Color.White)
-                    Spacer(Modifier.height(8.dp))
-                    Button(onClick = { launcher.launch(Manifest.permission.CAMERA) }) {
-                        Text("Autoriser")
-                    }
+            if (onBack != null) {
+                IconButton(onClick = onBack) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Retour",
+                        tint = Color.White
+                    )
                 }
+            }
+            Spacer(Modifier.weight(1f))
+            IconButton(onClick = onSync, enabled = !syncing) {
+                if (syncing) CircularProgressIndicator(
+                    Modifier.size(20.dp), strokeWidth = 2.dp, color = Color.White
+                ) else Icon(Icons.Default.Settings, contentDescription = null, tint = Color.Transparent)
+            }
+            IconButton(onClick = onOpenSettings) {
+                Icon(Icons.Default.Settings, contentDescription = "Réglages", tint = Color.White)
             }
         }
 
-        Spacer(Modifier.height(12.dp))
-        val syncText = if (lastSync > 0)
-            "Base : $gameCount jeux · sync ${DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(Date(lastSync))}"
-        else "Base : $gameCount jeux"
-        Text(syncText, style = MaterialTheme.typography.bodySmall)
+        // Compteur en bas
+        Text(
+            "$gameCount jeux en base",
+            color = Color.White.copy(alpha = 0.8f),
+            fontFamily = Lato,
+            fontSize = 13.sp,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
+                .padding(bottom = 16.dp)
+        )
     }
 }
 
@@ -128,7 +159,9 @@ private fun CameraPreview(scanEnabled: Boolean, onBarcode: (String) -> Unit) {
     AndroidView(
         modifier = Modifier.fillMaxSize(),
         factory = { ctx ->
-            val previewView = PreviewView(ctx)
+            val previewView = PreviewView(ctx).apply {
+                scaleType = PreviewView.ScaleType.FILL_CENTER
+            }
             val providerFuture = ProcessCameraProvider.getInstance(ctx)
             providerFuture.addListener({
                 val provider = providerFuture.get()

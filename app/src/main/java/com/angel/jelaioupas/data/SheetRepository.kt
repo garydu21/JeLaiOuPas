@@ -179,6 +179,8 @@ class SheetRepository(private val context: Context) {
 
     fun findByEan(rawCode: String): Game? = gamesByEan[EanUtils.normalize(rawCode)]
 
+    fun allGames(): List<Game> = gamesByEan.values.toList()
+
     // ----------------------------------------------------------------
     // Parsing : tableau plat (en-tête Titre/EAN/Possédé) OU catalogue
     // mis en forme (titre sur une ligne, EAN sur la suivante).
