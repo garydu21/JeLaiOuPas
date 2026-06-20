@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.Search
@@ -38,7 +37,11 @@ fun CollectionScreen(games: List<Game>, onBack: () -> Unit) {
                 title = { Text("Ma collection") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Retour")
+                        IconImage(
+                            com.angel.jelaioupas.R.drawable.ic_home,
+                            contentDescription = "Accueil",
+                            size = 26.dp
+                        )
                     }
                 }
             )

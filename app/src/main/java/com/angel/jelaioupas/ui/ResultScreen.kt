@@ -14,26 +14,27 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.angel.jelaioupas.ScanResult
 
 @Composable
 fun ResultScreen(result: ScanResult, onRescan: () -> Unit) {
-    fun label(title: String, console: String): String {
+    fun titre(title: String, console: String): String {
         val t = title.ifBlank { "?" }
         return if (console.isNotBlank()) "$t — $console" else t
     }
 
     val (bg, icon, headline, sub) = when (result) {
         is ScanResult.Owned -> Quad(
-            Color(0xFF2E7D32), Icons.Default.CheckCircle,
-            "TU L'AS DÉJÀ !", label(result.game.title, result.game.console)
+            Ps.Success, Icons.Default.CheckCircle,
+            "TU L'AS DÉJÀ !", titre(result.game.title, result.game.console)
         )
         is ScanResult.NotOwned -> Quad(
-            Color(0xFFC62828), Icons.Default.Cancel,
-            "TU L'AS PAS", label(result.game.title, result.game.console)
+            Ps.Danger, Icons.Default.Cancel,
+            "TU L'AS PAS", titre(result.game.title, result.game.console)
         )
         is ScanResult.Unknown -> Quad(
-            Color(0xFFEF6C00), Icons.Default.Help,
+            Ps.Warning, Icons.Default.Help,
             "INCONNU", "EAN ${result.ean} absent de ta base"
         )
     }
@@ -48,14 +49,16 @@ fun ResultScreen(result: ScanResult, onRescan: () -> Unit) {
         Text(
             headline,
             color = Color.White,
-            style = MaterialTheme.typography.displaySmall,
+            fontFamily = Lato,
+            fontSize = 34.sp,
             textAlign = TextAlign.Center
         )
         Spacer(Modifier.height(12.dp))
         Text(
             sub,
-            color = Color.White.copy(alpha = 0.9f),
-            style = MaterialTheme.typography.titleLarge,
+            color = Color.White.copy(alpha = 0.95f),
+            fontFamily = Lato,
+            fontSize = 20.sp,
             textAlign = TextAlign.Center
         )
         Spacer(Modifier.height(48.dp))
@@ -64,7 +67,7 @@ fun ResultScreen(result: ScanResult, onRescan: () -> Unit) {
             colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = bg),
             modifier = Modifier.fillMaxWidth().height(56.dp)
         ) {
-            Text("Scanner un autre jeu", style = MaterialTheme.typography.titleMedium)
+            Text("Scanner un autre jeu", fontFamily = Lato, fontSize = 17.sp)
         }
     }
 }

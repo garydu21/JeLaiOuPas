@@ -11,12 +11,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -102,9 +102,11 @@ fun HomeScreen(
                 }
                 Spacer(Modifier.width(4.dp))
                 IconButton(onClick = onSettings) {
-                    Icon(
-                        Icons.Default.Settings, contentDescription = "Réglages",
-                        tint = Color.White, modifier = Modifier.size(30.dp)
+                    IconImage(
+                        R.drawable.ic_settings,
+                        contentDescription = "Réglages",
+                        size = 28.dp,
+                        tint = Color.White
                     )
                 }
             }
@@ -117,6 +119,7 @@ fun HomeScreen(
                     .align(Alignment.CenterHorizontally)
                     .fillMaxWidth(0.72f)
                     .aspectRatio(1.5f)
+                    .shadow(12.dp, RoundedCornerShape(24.dp))
                     .clip(RoundedCornerShape(24.dp))
                     .background(if (scanning) Color.Black else CardWhite),
                 contentAlignment = Alignment.Center
@@ -156,8 +159,7 @@ fun HomeScreen(
 
             // --- Boutons ---
             HomeButton(onClick = { startScan() }) {
-                Text(label("Scanner", " un "), color = InkBlack, fontFamily = Lato, fontSize = 19.sp)
-                Text("CODE-BARRES", color = InkBlack, fontFamily = SquareFont, fontSize = 19.sp)
+                Text(scannerLabel(), color = InkBlack, fontSize = 19.sp)
             }
 
             Spacer(Modifier.height(14.dp))
@@ -182,6 +184,7 @@ private fun HomeButton(onClick: () -> Unit, content: @Composable RowScope.() -> 
         onClick = onClick,
         shape = RoundedCornerShape(16.dp),
         color = CardWhite,
+        shadowElevation = 10.dp,
         modifier = Modifier
             .fillMaxWidth(0.78f)
             .height(58.dp)
@@ -200,4 +203,24 @@ private fun label(bold: String, rest: String) = buildAnnotatedString {
     append(bold)
     pop()
     append(rest)
+}
+
+/** "Scanner un CODE-BARRES" : Lato pour le début, Square pour CODE-BARRES,
+ *  dans un seul Text pour une baseline commune (pas de décalage vertical). */
+private fun scannerLabel() = buildAnnotatedString {
+    pushStyle(
+        SpanStyle(
+            fontFamily = Lato,
+            fontWeight = FontWeight.Bold,
+            textDecoration = TextDecoration.Underline
+        )
+    )
+    append("Scanner")
+    pop()
+    pushStyle(SpanStyle(fontFamily = Lato))
+    append(" un ")
+    pop()
+    pushStyle(SpanStyle(fontFamily = SquareFont))
+    append("CODE-BARRES")
+    pop()
 }

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Charte Press SCAN -->
+    <color name="ps_danger">#FF4444</color>
+    <color name="ps_danger_dark">#CC0000</color>
+    <color name="ps_warning">#FFBB33</color>
+    <color name="ps_warning_dark">#FF8800</color>
+    <color name="ps_success">#00C851</color>
+    <color name="ps_success_dark">#007E33</color>
+    <color name="ps_info">#33B5E5</color>
+    <color name="ps_info_dark">#0099CC</color>
+</resources>
