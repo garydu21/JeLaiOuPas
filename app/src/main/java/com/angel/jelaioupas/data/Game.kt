@@ -4,7 +4,14 @@ data class Game(
     val title: String,
     val ean: String,      // normalisé sur 13 chiffres
     val owned: Boolean,
-    val console: String = ""
+    val console: String = "",
+    // Détails éditables
+    val statut: String = "",       // Neuf / Occasion
+    val notice: String = "",       // Oui / Non
+    val etat: String = "",         // Mauvais / Moyen / Bon / Comme neuf / Neuf
+    // Coordonnées dans le Sheet pour l'écriture (ligne des infos = N+1)
+    val tab: String = "",          // onglet
+    val rowIndex: Int = -1         // numéro de ligne Sheet (1-based) des infos
 )
 
 object EanUtils {
