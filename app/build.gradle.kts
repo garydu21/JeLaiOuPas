@@ -28,6 +28,25 @@ android {
     }
     kotlinOptions { jvmTarget = "17" }
     buildFeatures { compose = true }
+
+    packaging {
+        resources {
+            excludes += setOf(
+                "META-INF/DEPENDENCIES",
+                "META-INF/LICENSE",
+                "META-INF/LICENSE.txt",
+                "META-INF/LICENSE.md",
+                "META-INF/NOTICE",
+                "META-INF/NOTICE.txt",
+                "META-INF/NOTICE.md",
+                "META-INF/INDEX.LIST",
+                "META-INF/*.kotlin_module",
+                "META-INF/io.netty.versions.properties",
+                "META-INF/DEPENDENCIES.txt"
+            )
+        }
+    }
+
 }
 
 dependencies {
@@ -61,4 +80,21 @@ dependencies {
 
     // DataStore pour la config (URL de la sheet)
     implementation("androidx.datastore:datastore-preferences:1.1.1")
+
+    // --- Connexion Google + autorisation Drive/Sheets ---
+    implementation("com.google.android.gms:play-services-auth:21.4.0")
+
+    // Client API Google (Drive + Sheets) en HTTP, compatible Android
+    implementation("com.google.api-client:google-api-client-android:2.7.0") {
+        exclude(group = "org.apache.httpcomponents")
+        exclude(group = "com.google.guava", module = "guava-jdk5")
+    }
+    implementation("com.google.apis:google-api-services-drive:v3-rev20240914-2.0.0") {
+        exclude(group = "org.apache.httpcomponents")
+    }
+    implementation("com.google.apis:google-api-services-sheets:v4-rev20240826-2.0.0") {
+        exclude(group = "org.apache.httpcomponents")
+    }
+    implementation("com.google.auth:google-auth-library-oauth2-http:1.23.0")
+
 }

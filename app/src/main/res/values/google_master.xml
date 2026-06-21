@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ID du Google Sheet MAÎTRE à copier pour chaque utilisateur -->
+    <string name="google_master_sheet_id" translatable="false">1ZOAhor3KW5pD3Gkul_1pxwQbxQfwmoG22-ItKVjCM3I</string>
+</resources>

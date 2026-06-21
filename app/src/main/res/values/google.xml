@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Web client ID OAuth (Google Cloud > Clients > client Web) -->
+    <string name="google_web_client_id" translatable="false">934507839197-uosqhpbu4bvr00l9ois9q8rp33fh0con.apps.googleusercontent.com</string>
+</resources>

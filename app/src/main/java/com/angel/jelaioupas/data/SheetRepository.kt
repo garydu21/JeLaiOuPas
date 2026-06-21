@@ -137,7 +137,7 @@ class SheetRepository(private val context: Context) {
                 )
 
             gamesByEan = all
-            gameCount = all.size
+            gameCount = all.values.count { it.owned }
             saveCache(all.values)
             context.dataStore.edit { it[keyLastSync] = System.currentTimeMillis() }
 
@@ -173,13 +173,47 @@ class SheetRepository(private val context: Context) {
                 if (p.size >= 4) map[p[1]] = Game(p[0], p[1], p[2] == "1", p[3])
             }
             gamesByEan = map
-            gameCount = map.size
+            gameCount = map.values.count { it.owned }
         }.isSuccess && gameCount > 0
     }
 
     fun findByEan(rawCode: String): Game? = gamesByEan[EanUtils.normalize(rawCode)]
 
+    /** Met à jour un jeu dans la map locale (après écriture Sheet). */
+    fun updateLocal(game: Game) {
+        val m = HashMap(gamesByEan)
+        m[game.ean] = game
+        gamesByEan = m
+        gameCount = m.values.count { it.owned }
+    }
+
     fun allGames(): List<Game> = gamesByEan.values.toList()
+
+    /**
+     * Charge la base depuis des données déjà lues via l'API Sheets.
+     * Réutilise le même parsing que l'export CSV.
+     */
+    suspend fun loadFromApiRows(tabs: List<Pair<String, List<List<String>>>>): Int =
+        withContext(Dispatchers.IO) {
+            val all = HashMap<String, Game>()
+            for ((tabName, rows) in tabs) {
+                all.putAll(parseRows(rows, console = tabName))
+            }
+            gamesByEan = all
+            gameCount = all.values.count { it.owned }
+            saveCache(all.values)
+            context.dataStore.edit { it[keyLastSync] = System.currentTimeMillis() }
+            gameCount
+        }
+
+    private fun parseRows(rows: List<List<String>>, console: String): Map<String, Game> {
+        if (rows.isEmpty()) return emptyMap()
+        val header = rows.first().map { it.trim().lowercase() }
+        return if (header.any { it.contains("ean") || it.contains("code-barre") })
+            parseFlatTable(rows, header, console)
+        else
+            parseCatalog(rows, console)
+    }
 
     // ----------------------------------------------------------------
     // Parsing : tableau plat (en-tête Titre/EAN/Possédé) OU catalogue
@@ -233,6 +267,12 @@ class SheetRepository(private val context: Context) {
                 .filter { it.count { c -> c.isLetter() } >= 2 }
                 .maxByOrNull { it.length }
 
+        // Index de colonnes (0-based) du format Press SCAN
+        val colCollection = 15 // P
+        val colStatut = 19     // T
+        val colNotice = 23     // X
+        val colEtat = 27       // AB
+
         val map = HashMap<String, Game>()
         for (i in rows.indices) {
             val row = rows[i]
@@ -245,10 +285,35 @@ class SheetRepository(private val context: Context) {
                     if (title != null) break
                 }
             }
-            val owned = row.any { it.trim().lowercase() in ownedTokens }
+
+            fun cell(idx: Int): String = row.getOrNull(idx)?.trim().orEmpty()
+            val collection = cell(colCollection)
+            val statut = cell(colStatut)
+            val notice = cell(colNotice)
+            val etat = cell(colEtat)
+
+            // "possédé" UNIQUEMENT si la colonne P (collection) dit oui.
+            // (Avant : un "oui" dans Notice faisait croire à tort qu'on possédait le jeu.)
+            val collectionLower = collection.lowercase()
+            val owned = if (collection.isNotBlank()) {
+                collectionLower in ownedTokens
+            } else {
+                // Ancien format sans colonne P remplie : repli sur tokens de la ligne
+                row.any { it.trim().lowercase() in ownedTokens }
+            }
 
             val key = EanUtils.normalize(ean)
-            map[key] = Game(title = title.orEmpty(), ean = key, owned = owned, console = console)
+            map[key] = Game(
+                title = title.orEmpty(),
+                ean = key,
+                owned = owned,
+                console = console,
+                statut = statut,
+                notice = notice,
+                etat = etat,
+                tab = console,
+                rowIndex = i + 1   // ligne Sheet 1-based de la ligne EAN
+            )
         }
         return map
     }

@@ -1,90 +1,164 @@
 package com.angel.jelaioupas.ui
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.GraphicEq
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.angel.jelaioupas.R
 
-@OptIn(ExperimentalMaterial3Api::class)
+private val CardWhite = Color(0xFFFDFDFB)
+private val InkBlack = Color(0xFF161616)
+
+private fun under(bold: String, rest: String) = buildAnnotatedString {
+    pushStyle(SpanStyle(fontWeight = FontWeight.Bold, textDecoration = TextDecoration.Underline))
+    append(bold); pop()
+    pushStyle(SpanStyle(fontStyle = FontStyle.Italic)); append(rest); pop()
+}
+
 @Composable
 fun SettingsScreen(
-    currentUrl: String,
-    currentTabs: String,
-    gameCount: Int,
-    syncing: Boolean,
-    syncError: String?,
-    canGoBack: Boolean,
-    onSave: (String, String) -> Unit,
+    soundEnabled: Boolean,
+    vibrationEnabled: Boolean,
+    onSoundChange: (Boolean) -> Unit,
+    onVibrationChange: (Boolean) -> Unit,
+    onDisconnect: () -> Unit,
     onBack: () -> Unit
 ) {
-    var url by remember(currentUrl) { mutableStateOf(currentUrl) }
-    var tabs by remember(currentTabs) { mutableStateOf(currentTabs) }
+    Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
+        Image(
+            painter = painterResource(R.drawable.home_bg),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+        Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.45f)))
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Réglages") },
-                navigationIcon = {
-                    if (canGoBack) IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Retour")
+        Column(modifier = Modifier.fillMaxSize()) {
+
+            // Header : Retourner à l'accueil + maison
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TextButton(onClick = onBack) {
+                    Text(under("Retourner", " à l'accueil"), color = Color.White, fontFamily = Lato, fontSize = 18.sp)
+                }
+                Spacer(Modifier.width(4.dp))
+                IconButton(onClick = onBack) {
+                    IconImage(R.drawable.ic_home, contentDescription = "Accueil", tint = Color.White, size = 30.dp)
+                }
+            }
+
+            Spacer(Modifier.weight(1f))
+
+            // Carte : Sons + Vibrations
+            Card(
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = CardWhite),
+                modifier = Modifier
+                    .padding(horizontal = 24.dp)
+                    .fillMaxWidth()
+                    .shadow(10.dp, RoundedCornerShape(20.dp))
+            ) {
+                Column(Modifier.padding(horizontal = 22.dp, vertical = 18.dp)) {
+                    SettingRow(
+                        icon = { Icon(Icons.AutoMirrored.Filled.VolumeUp, null, tint = InkBlack, modifier = Modifier.size(28.dp)) },
+                        label = "Sons",
+                        checked = soundEnabled,
+                        onCheckedChange = onSoundChange
+                    )
+                    Spacer(Modifier.height(14.dp))
+                    SettingRow(
+                        icon = { Icon(Icons.Default.GraphicEq, null, tint = InkBlack, modifier = Modifier.size(28.dp)) },
+                        label = "Vibrations",
+                        checked = vibrationEnabled,
+                        onCheckedChange = onVibrationChange
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(18.dp))
+
+            // Carte : Compte Google + bouton Déconnecter
+            Card(
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = CardWhite),
+                modifier = Modifier
+                    .padding(horizontal = 24.dp)
+                    .fillMaxWidth()
+                    .shadow(10.dp, RoundedCornerShape(20.dp))
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 22.dp, vertical = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.ic_google_g),
+                        contentDescription = null,
+                        modifier = Modifier.size(28.dp)
+                    )
+                    Spacer(Modifier.width(16.dp))
+                    Text("Compte Google", color = InkBlack, fontFamily = Lato, fontSize = 20.sp, modifier = Modifier.weight(1f))
+                    Button(
+                        onClick = onDisconnect,
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFCC0000)),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                    ) {
+                        Text("Déconnecter", color = Color.White, fontFamily = Lato, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                     }
                 }
-            )
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .padding(padding)
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState())
-        ) {
-            Text(
-                "Colle l'URL de ta Google Sheet (partagée \"Tous les utilisateurs " +
-                    "disposant du lien\", lecture). Laisse le champ Onglets vide pour " +
-                    "charger automatiquement TOUS les onglets, ou liste-en certains " +
-                    "(séparés par des virgules) pour te limiter à ceux-là.",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Spacer(Modifier.height(16.dp))
-            OutlinedTextField(
-                value = url,
-                onValueChange = { url = it },
-                label = { Text("URL Google Sheet") },
-                placeholder = { Text("https://docs.google.com/spreadsheets/d/…") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(Modifier.height(12.dp))
-            OutlinedTextField(
-                value = tabs,
-                onValueChange = { tabs = it },
-                label = { Text("Onglets (vide = tous, auto)") },
-                placeholder = { Text("ex : Xbox, PS2 — ou laisse vide") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(Modifier.height(16.dp))
-            Button(
-                onClick = { onSave(url, tabs) },
-                enabled = url.isNotBlank() && !syncing,
-                modifier = Modifier.fillMaxWidth().height(52.dp)
-            ) {
-                if (syncing) CircularProgressIndicator(
-                    Modifier.size(22.dp), strokeWidth = 2.dp,
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
-                else Text("Enregistrer et synchroniser")
             }
-            Spacer(Modifier.height(16.dp))
-            if (syncError != null) {
-                Text("Erreur : $syncError", color = MaterialTheme.colorScheme.error)
-            } else if (gameCount > 0) {
-                Text("$gameCount jeux chargés ✓", color = MaterialTheme.colorScheme.primary)
-            }
+
+            Spacer(Modifier.weight(1f))
+            Spacer(Modifier.navigationBarsPadding())
         }
+    }
+}
+
+@Composable
+private fun SettingRow(
+    icon: @Composable () -> Unit,
+    label: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+        icon()
+        Spacer(Modifier.width(16.dp))
+        Text(label, color = InkBlack, fontFamily = Lato, fontSize = 20.sp, modifier = Modifier.weight(1f))
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Color.White,
+                checkedTrackColor = InkBlack,
+                uncheckedThumbColor = Color.White,
+                uncheckedTrackColor = Color(0xFFBDBDBD)
+            )
+        )
     }
 }
